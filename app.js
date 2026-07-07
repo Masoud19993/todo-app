@@ -12,7 +12,19 @@ form.addEventListener("submit", function (event) {
   }
 
   const li = document.createElement("li");
-  li.textContent = taskText;
+
+  const span = document.createElement("span");
+  span.textContent = taskText;
+
+  const deleteButton = document.createElement("button");
+  deleteButton.textContent = "Supprimer";
+
+  deleteButton.addEventListener("click", function () {
+      li.remove();
+    });
+
+  li.appendChild(span);
+  li.appendChild(deleteButton);
 
   taskList.appendChild(li);
 
