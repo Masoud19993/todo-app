@@ -1,9 +1,10 @@
 const form = document.querySelector("#task-form");
 const input = document.querySelector("#task-input");
 const taskList = document.querySelector("#task-list");
+const errorMessage = document.querySelector("#error-message");
 
 let tasks = [];
-""
+
 function saveTasks() {
   localStorage.setItem("tasks", JSON.stringify(tasks));
 }
@@ -43,6 +44,35 @@ function renderTasks() {
   });
 }
 
+function addTask(taskText) {
+  const task = {
+    id: Date.now() + Math.random(),
+    text: taskText
+  };
+
+  tasks.push(task);
+  saveTasks();
+  renderTasks();
+}
+
+async function loadSuggestions() {
+  try {
+    const response = await fetch("https://jsonplaceholder.typicode.com/todos?_limit=5");
+
+    if (!response.ok) {
+      throw new Error("Erreur lors du chargement des suggestions");
+    }
+
+    const suggestions = await response.json();
+
+    suggestions.forEach(function (suggestion) {
+      addTask(suggestion.title);
+    });
+  } catch (error) {
+    errorMessage.textContent = "Impossible de charger les suggestions de tâches.";
+  }
+}
+
 form.addEventListener("submit", function (event) {
   event.preventDefault();
 
@@ -52,18 +82,14 @@ form.addEventListener("submit", function (event) {
     return;
   }
 
-  const task = {
-    id: Date.now(),
-    text: taskText
-  };
-
-  tasks.push(task);
-
-  saveTasks();
-  renderTasks();
+  addTask(taskText);
 
   input.value = "";
 });
 
 loadTasks();
 renderTasks();
+
+if (tasks.length === 0) {
+  loadSuggestions();
+}
