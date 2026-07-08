@@ -1,24 +1,21 @@
+import {
+  getTasks,
+  loadTasks,
+  addTask,
+  deleteTask
+} from "./tasks.js";
+
+import { getTaskSuggestions } from "./api.js";
+
 const form = document.querySelector("#task-form");
 const input = document.querySelector("#task-input");
 const taskList = document.querySelector("#task-list");
 const errorMessage = document.querySelector("#error-message");
 
-let tasks = [];
-
-function saveTasks() {
-  localStorage.setItem("tasks", JSON.stringify(tasks));
-}
-
-function loadTasks() {
-  const savedTasks = localStorage.getItem("tasks");
-
-  if (savedTasks) {
-    tasks = JSON.parse(savedTasks);
-  }
-}
-
 function renderTasks() {
   taskList.innerHTML = "";
+
+  const tasks = getTasks();
 
   tasks.forEach(function (task) {
     const li = document.createElement("li");
@@ -30,11 +27,7 @@ function renderTasks() {
     deleteButton.textContent = "Supprimer";
 
     deleteButton.addEventListener("click", function () {
-      tasks = tasks.filter(function (item) {
-        return item.id !== task.id;
-      });
-
-      saveTasks();
+      deleteTask(task.id);
       renderTasks();
     });
 
@@ -44,30 +37,15 @@ function renderTasks() {
   });
 }
 
-function addTask(taskText) {
-  const task = {
-    id: Date.now() + Math.random(),
-    text: taskText
-  };
-
-  tasks.push(task);
-  saveTasks();
-  renderTasks();
-}
-
 async function loadSuggestions() {
   try {
-    const response = await fetch("https://jsonplaceholder.typicode.com/todos?_limit=5");
-
-    if (!response.ok) {
-      throw new Error("Erreur lors du chargement des suggestions");
-    }
-
-    const suggestions = await response.json();
+    const suggestions = await getTaskSuggestions();
 
     suggestions.forEach(function (suggestion) {
       addTask(suggestion.title);
     });
+
+    renderTasks();
   } catch (error) {
     errorMessage.textContent = "Impossible de charger les suggestions de tâches.";
   }
@@ -83,6 +61,7 @@ form.addEventListener("submit", function (event) {
   }
 
   addTask(taskText);
+  renderTasks();
 
   input.value = "";
 });
@@ -90,6 +69,6 @@ form.addEventListener("submit", function (event) {
 loadTasks();
 renderTasks();
 
-if (tasks.length === 0) {
+if (getTasks().length === 0) {
   loadSuggestions();
 }
